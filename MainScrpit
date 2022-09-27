@@ -1,0 +1,352 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace Inputs
+{
+    public class MainScript : MonoBehaviour
+    {
+        [SerializeField] private Text informationText;
+        [SerializeField] private Text infoText;
+        [SerializeField] private Text centringText;
+        [SerializeField] private Text angleText;
+        [SerializeField] private Text horizontingText;
+        [SerializeField] private GameObject angleImage;
+        [SerializeField] private CameraManager cameraManager;
+        [SerializeField] private GameObject startPanel;
+        [SerializeField] private GameObject railsl;
+        [SerializeField] private GameObject panel;
+        [SerializeField] private GameObject table;
+        [SerializeField] private GameObject coordinates;
+        [SerializeField] private GameObject centrir;
+        [SerializeField] private GameObject [] raillast;
+        [SerializeField] private GameObject [] railnext;
+        [SerializeField] private CanvasGroup startPanelImage;
+        [SerializeField] private Button StartReserchesBtn;
+        [SerializeField] private Button StartBtn;
+        [SerializeField] private Button NextPointbtn;
+        [SerializeField] private Button ViewResultReserchBtn;
+        [SerializeField] private ResearchesMenu researchesMenu;
+        [SerializeField] private BubbleReserch reserch1;
+        [SerializeField] private LineOfSightPosition reserch3;
+        [SerializeField] private TelescopeMagnification reserch4;
+        [SerializeField] private MeshThreadPosition reserch2;
+        [SerializeField] private Text resaltReserchText;
+        [SerializeField] private Button openTable;
+        [SerializeField] private Button closeTable;
+        [SerializeField] private GameObject views;
+        [SerializeField] private GameObject distancePanel;
+        [SerializeField] private GameObject anglePanel;
+        [SerializeField] private GameObject teodolit;
+        [SerializeField] private GameObject Instrument;
+        [SerializeField] private InstrumentMover InstrumentMover;
+        [SerializeField] private JournalCalck JournalCalck;
+        [SerializeField] private Transform nextPointTransform;
+        [SerializeField] private Transform lastPointTransform;
+        [SerializeField] private Transform[] pointTransform;
+        [SerializeField] private GameObject alidad;
+        [SerializeField] private Text[] cell;
+        private float x, z = 0;
+        private int reserchCounter;
+        private int i;
+        void Start()
+        {
+            startPanelImage = GameObject.Find("FadeCanvas").GetComponent<CanvasGroup>();
+            informationText.text = $"Эта часть приложения направлена на закрепление полученных в предыдущем модуле навыков выполнения поверок, а также на получение новых знаний, касающихся принципу работы с теодолитом, выполнения теодолитной съемки и получения прямоугольных координат пунктов теодолитного хода.";            
+        }
+
+        public void ViewInstruction()
+        {
+            StartBtn.gameObject.SetActive(false);
+            cameraManager.StartFieldPosition();//стартовое полодение каиеры
+            informationText.text = $"Вам будет предложено выполнить теодолитную съемку местности. Для этого был проложен теодолитный ход, состоящий из пяти пунктов, два из которых имеют известные прямоугольные координаты. Перед началом работы необходимо поверить инструмент.";
+            StartReserchesBtn.gameObject.SetActive(true);
+        }
+
+        IEnumerator FadeCoroutine()
+        {
+            for (float f = 0; f <= 2; f += Time.deltaTime)
+            {
+                startPanelImage.alpha = Mathf.Lerp(1f, 0f, f / 2);
+                yield return null;
+            }
+            startPanelImage.alpha = 0;
+            startPanelImage.gameObject.SetActive(false);
+        }
+
+        public void ResearchBtn()
+        {
+            StartCoroutine(FadeCoroutine());
+            StartReserchesBtn.gameObject.SetActive(false);
+            ViewResultReserchBtn.gameObject.SetActive(true);
+            string result = "Завершить";
+            switch (reserchCounter)
+            {
+                case 0:
+                    researchesMenu.LoadResearch("3");
+                    break;
+                case 1:
+                    resaltReserchText.gameObject.SetActive(true);
+
+                    researchesMenu.LoadResearch("4"); 
+                    break;
+                case 2:
+                    resaltReserchText.gameObject.SetActive(true);
+
+                    researchesMenu.LoadResearch("5");
+                    break;
+                case 3:
+                    resaltReserchText.gameObject.SetActive(true);
+
+                    researchesMenu.LoadResearch("6");
+                    break;
+                case 4:
+                    resaltReserchText.gameObject.SetActive(true);
+
+                    researchesMenu.LoadResearch("7");
+                    break;
+                case 5:
+                    StartFirstStation();
+                    openTable.gameObject.SetActive(true);
+                    reserchCounter++;
+                    break;
+            }
+            reserchCounter++;
+            resaltReserchText.text = $"{result}";
+        }
+
+        public void OpenTable()
+        {
+            table.SetActive(true);
+            closeTable.gameObject.SetActive(true);
+            openTable.gameObject.SetActive(false);
+            views.SetActive(false);
+        }
+
+        public void CloseTable()
+        {
+            table.SetActive(false);
+            closeTable.gameObject.SetActive(false);
+            openTable.gameObject.SetActive(true);
+            views.SetActive(true);
+        }
+
+        public void ClosePanel()
+        {
+            distancePanel.SetActive(false);
+            anglePanel.SetActive(false);
+        }
+
+        public void ViewResultReserch()
+        {
+            resaltReserchText.gameObject.SetActive(true);
+            ViewResultReserchBtn.gameObject.SetActive(false);
+            StartReserchesBtn.gameObject.SetActive(true);
+        }
+
+        private void StartFirstStation()
+        {
+            cameraManager.MoveToMain();
+            Centring();
+        }
+
+        private void Update()
+        {
+            if (Input.GetKey(KeyCode.O))
+            {
+               x += 10.1f;
+            }
+            if (Input.GetKey(KeyCode.I))
+            {
+               x -= 10.1f;
+            }
+            if (Input.GetKey(KeyCode.L))
+            {
+               z += 10.1f;
+            }
+            if (Input.GetKey(KeyCode.K))
+            {
+               z -= 10.1f;
+            }
+        }
+        private void Centring()//центрирование
+        {
+            StartCoroutine(timeTextcentring());
+            Instrument.transform.Translate(x, 0, z);
+            Invoke(nameof(Horizonting), 15f);
+        }
+        private IEnumerator timeTextcentring()
+        {
+            centrir.gameObject.SetActive(true);
+            panel.gameObject.SetActive(true);
+            centringText.gameObject.SetActive(true);
+            cameraManager.MoveToNew();
+            yield return new WaitForSeconds(10);
+
+            panel.gameObject.SetActive(false);
+            centringText.gameObject.SetActive(false);
+        }
+        private IEnumerator timeTexthorizonting()
+        {
+            centrir.gameObject.SetActive(false);
+            panel.gameObject.SetActive(true);
+            horizontingText.gameObject.SetActive(true);
+            cameraManager.MoveToBubble();
+            yield return new WaitForSeconds(7);
+
+            panel.gameObject.SetActive(false);
+            horizontingText.gameObject.SetActive(false);
+        }
+        private IEnumerator timeTextangle()
+        {
+            railsl.gameObject.SetActive(false);
+            raillast[0].gameObject.SetActive(true);
+            railnext[0].gameObject.SetActive(true);
+            panel.gameObject.SetActive(true);
+            angleImage.gameObject.SetActive(true);
+            angleText.gameObject.SetActive(true);
+            cameraManager.MoveToMain();
+            yield return new WaitForSeconds(7);
+
+            panel.gameObject.SetActive(false);
+            angleImage.gameObject.SetActive(false);
+            angleText.gameObject.SetActive(false);
+        }
+        private void Horizonting()//горизонтирование
+        {
+            StartCoroutine(timeTexthorizonting());
+            teodolit.transform.Rotate(x, 0, z);
+            Invoke(nameof(AngleMeasureLast),12f);
+        }
+        private void AngleMeasureLast()
+        {
+            StartCoroutine(timeTextangle());
+            InstrumentMover.ResetPosLast();
+            InstrumentMover.ResetLimb();
+            Invoke(nameof(AngleMeasureNext), 12f);
+        }
+        private void AngleMeasureNext()
+        {
+            InstrumentMover.ResetPosNext();
+            Invoke(nameof(NextPoint), 5f);
+        }
+        private void KLLast()//КЛ предыдущая точка
+        {
+            cameraManager.MoveToMain();
+            StartCoroutine(ToPointMove(lastPointTransform));
+            InstrumentMover.ResetLimb();
+            var angle1 = alidad.transform.localEulerAngles.y;
+            var graduses = JournalCalck.NormalViewGraduses(angle1, out var minutes, out var seconds);
+            cell[0].text = $"{graduses}";
+            cell[1].text = $"{minutes}";
+            cell[2].text = $"{seconds}";
+           Invoke(nameof(DalnomerDistanceKLLast), 5f);
+        }
+        private void DalnomerDistanceKLLast()//дальномерное расстояние
+        {
+            cell[12].text = "149.23";
+            Invoke(nameof(KLNext), 5f);
+        }
+
+        private IEnumerator ToPointMove(Transform transform)
+        {
+            while (teodolit.transform.rotation != transform.rotation)
+            {
+                InstrumentMover.AllidadaRotation(1000);
+            }
+            yield return new WaitForSeconds(0.01f);
+        }
+
+        private void KLNext()//КЛ следующая точка
+        {
+            StartCoroutine(ToPointMove(nextPointTransform));
+            InstrumentMover.ResetLimb();
+            var angle1 = alidad.transform.localEulerAngles.y;
+            var graduses = JournalCalck.NormalViewGraduses(angle1, out var minutes, out var seconds);
+            cell[3].text = $"{graduses}";
+            cell[4].text = $"{minutes}";
+            cell[5].text = $"{seconds}";
+            Invoke(nameof(DalnomerDistanceKLNext), 5f);
+        }
+        private void DalnomerDistanceKLNext()//дальномерное расстояние
+        {
+            cell[13].text = "140.91";
+            Invoke(nameof(KPLast), 5f);
+        }
+
+        private void KPLast()//КП предыдущая точка
+        {
+            StartCoroutine(ToPointMove(lastPointTransform));
+            //StartCoroutine(LineOfSightPosition.CircleChange());
+            InstrumentMover.ResetLimb();
+            var angle1 = alidad.transform.localEulerAngles.y;
+            var graduses = JournalCalck.NormalViewGraduses(angle1, out var minutes, out var seconds);
+            cell[6].text = $"{graduses}";
+            cell[7].text = $"{minutes}";
+            cell[8].text = $"{seconds}";
+            Invoke(nameof(KPNext), 5f);
+        }
+
+        private void KPNext()//КП следующая точка
+        {
+            StartCoroutine(ToPointMove(nextPointTransform));
+            InstrumentMover.ResetLimb();
+            var angle1 = alidad.transform.localEulerAngles.y;
+            var graduses = JournalCalck.NormalViewGraduses(angle1, out var minutes, out var seconds);
+            cell[9].text = $"{graduses}";
+            cell[10].text = $"{minutes}";
+            cell[11].text = $"{seconds}";
+            Invoke(nameof(NextPoint), 5f);
+        }
+        public void Journal()
+        {
+            table.gameObject.SetActive(true);
+            NextPointbtn.gameObject.SetActive(false);
+            ViewResultReserchBtn.gameObject.SetActive(false);
+            openTable.gameObject.SetActive(false);
+            researchesMenu.gameObject.SetActive(false);
+            Invoke(nameof(Coordinates), 10f);
+        }
+        public void Coordinates()
+        {
+            coordinates.gameObject.SetActive(true);
+        }
+        public void ToNextPoint()
+        {
+            
+            infoText.gameObject.SetActive(false);
+            panel.gameObject.SetActive(false);
+            InstrumentMover.ResetLimb();
+            alidad.transform.rotation = pointTransform[i].rotation;
+            Instrument.transform.position = pointTransform[i].position;
+            raillast[i].gameObject.SetActive(true);
+            railnext[i].gameObject.SetActive(true);
+            raillast[i-1].gameObject.SetActive(false);
+            railnext[i-1].gameObject.SetActive(false);
+            i++;
+            if ((i + 1) == 6)
+            {
+                NextPointbtn.gameObject.SetActive(false);
+                Invoke(nameof(Journal), 4f);
+            }
+                
+        }
+        public void NextPoint()
+        {
+            InstrumentMover.ResetLimb();
+            NextPointbtn.gameObject.SetActive(true);
+            railsl.gameObject.SetActive(false);
+            
+            infoText.text = $"Теперь Вы можете самостоятельно произвести измерения на последующих точках хода. После нажатия на кнопку Вы переместитесь на вторую точку.";
+            infoText.gameObject.SetActive(true);
+            panel.gameObject.SetActive(true);
+            Instrument.transform.rotation = pointTransform[0].rotation;
+            Instrument.transform.position = pointTransform[0].position;
+            raillast[0].gameObject.SetActive(true);
+            railnext[0].gameObject.SetActive(true);
+            i++;
+            
+        }
+    }
+}
