@@ -1,0 +1,134 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class CoordinatesCalc : MonoBehaviour
+{
+    [SerializeField] private Text[] MeasuredAngle;
+    [SerializeField] private Text[] MeasuredDistance;
+    [SerializeField] private Text[] TrueAngle;
+    [SerializeField] private Text[] perimetrText;
+    [SerializeField] private Text[] DirAngle;
+    [SerializeField] private Text[] rumb;
+    [SerializeField] private Text[] deltaXText;
+    [SerializeField] private Text[] deltaYText;
+    [SerializeField] private Text[] nevyazXText;
+    [SerializeField] private Text[] nevyazYText;
+    [SerializeField] private Text[] sumAngleteorText;
+    [SerializeField] private Text[] nevyazText;
+    [SerializeField] private Text[] TrueDeltaXText;
+    [SerializeField] private Text[] TrueDeltaYText;
+    [SerializeField] private Text[] fsText;
+    [SerializeField] private Text[] fotnText;
+    [SerializeField] private Text[] coorXText;
+    [SerializeField] private Text[] coorYText;
+    
+    void Start()
+    { var sumAngle;
+
+        SummaUglov();
+
+        TrueAngles();
+
+        DirectionalAndRumbs();
+
+        Coordinates();
+            
+        
+
+    }
+    private void SummaUglov()
+    {
+        for (int i = 0; i < MeasuredAngle.Length; i++)
+        {
+            globalAngle=ParseAngle(MeasuredAngle[i]);
+            sumAngle += globalAngle;
+        }
+        var sumAngleteor = 180 * (MeasuredAngle.Length - 2);
+        sumAngleteorText.text = $"{sumAngleteor}";
+        var nevyaz = sumAngleteor - sumAngle;
+        nevyazText.text = $"{nevyazYText}";
+        var popravka = nevyaz / MeasuredAngle.Length;
+    }
+    private void TrueAngles()
+    {
+        for (int i = 0; i < MeasuredAngle.Length; i++)
+        {
+            globalAngle = ParseAngle(MeasuredAngle[i]);
+            graduses = NormalViewGraduses(globalAngle, out minutes, out seconds);
+            TrueAngle[i].text = $"{graduses}° {minutes}' {seconds}";
+            sumAngle += globalAngle;
+
+        }
+        sumTrueAngle.text = $"{sumAngle}";
+    }
+    private float ParseAngle(Text angle)
+    {
+        var string[] angle = angle.Split(new char[] { '°'''' });
+        float globalAngle = float.Parse(angle[0]) + float.Parse(angle[1]) / 60 + float.Parse(angle[2]) / 3600;
+        return globalAngle;
+    }
+    private void DirectionalAndRumbs()
+    {
+        for (int i = 0; i < DirAngle.Length - 1; i++)
+        {
+            globalAngle = ParseAngle(DirAngle[i]);
+            globalAngle1 = ParseAngle(TrueAngle[i]);
+            if ((globalAngle + 180) < globalAngle1)
+                dirAngle = ((globalAngle + 180) + 360) - globalAngle1;
+            if (dirAngle > 360)
+                dirAngle -= 360;
+            graduses = NormalViewGraduses(dirAngle, out minutes, out seconds);
+            DirAngle[i + 1].text = $"{graduses}° {minutes}' {seconds}";
+            if (dirAngle < 90) &(dirAngle > 0)
+                    rumb[i] = $"СВ{dirAngle}";
+            if (dirAngle < 180) &(dirAngle > 90)
+                    rumb[i] = $"ЮВ{180 - dirAngle}";
+            if (dirAngle < 270) &(dirAngle > 180)
+                    rumb[i] = $"ЮЗ{dirAngle - 180}";
+            if (dirAngle < 360) &(dirAngle > 270)
+                    rumb[i] = $"СЗ{360 - dirAngle}";
+
+        }
+    }
+    private void Coordinates()
+    {
+        for (int i = 0; i < MeasuredDistance.Length; i++)
+        {
+            float perimetr += float.Parse(MeasuredDistance[i]);
+            perimetrText.text = $"{perimetr}";
+            float deltaX[i] = MeasuredDistance[i] * Mathf.Cos(DirAngle[i]);
+            deltaXText[i].text = $"{deltaX[i]}";
+            float nevyazX+= deltaX[i];
+            nevyazXText.text = $"{nevyazX}";
+            float popravX = nevyazX / MeasuredDistance.Length;
+            float TrueDeltaX[i] = deltaX[i] + popravX;
+            TrueDeltaXText[i].text = $"{TrueDeltaX[i]}";
+            float deltaY[i] = MeasuredDistance[i] * Mathf.Sin(DirAngle[i]);
+            deltaYText[i].text = $"{deltaY[i]}";
+            float nevyazY+= deltaY[i];
+            nevyazYText.text = $"{nevyazY}";
+            float popravY = nevyazY / MeasuredDistance.Length;
+            float TrueDeltaY[i] = deltaY[i] + popravY;
+            TrueDeltaYText[i].text = $"{TrueDeltaY[i]}";
+            float fs = Mathf.sqrt(Mathf.sqr(nevyazX) + Mathf.sqr(nevyazY));
+            fsText.text = $"{fs}";
+            float fotn = 1 / (perimetr / fs);
+            fotnText.text = $"{fotn}";
+            float coorX[i + 1] = coorX[i] + TrueDeltaX[i];
+            coorXText[i + 1].text = $"{coorX[i + 1]}";
+            float coorY[i + 1] = coorY[i] + TrueDeltaY[i];
+            coorYText[i + 1].text = $"{coorY[i + 1]}";
+        }
+    }
+    public int NormalViewGraduses(float angle, out int minutes, out float seconds)
+    {
+        int graduses = (int)angle;
+        float _minut = (angle - graduses) * 60;
+        minutes = (int)_minut;
+        float _second = (_minut - minutes) * 60;
+        seconds = (float)System.Math.Round(_second, 1);
+        return graduses;
+    }
+
+}
