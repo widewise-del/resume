@@ -1,0 +1,152 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using SlimUI.ModernMenu;
+using UnityEngine;
+using UnityEngine.Serialization;
+using UnityEngine.UI;
+
+public class StationWorks : MonoBehaviour
+{
+    [SerializeField] private GameObject[] listOfModuls;
+    [SerializeField] private GameObject[] listOfDescriptions;
+    [SerializeField] private GameObject[] listOfResults;
+
+    //[SerializeField] private GameObject view;
+    //[SerializeField] private GameObject ruller;
+
+    [SerializeField] private CameraManager cameraManager;
+
+   private Transform descriptionTransform;
+   private Transform researchTransform;
+
+   private GameObject research;
+    private GameObject description;
+
+    private GameObject menuCamera;
+    private MainMenuNew mainMenu;
+
+    private GameObject next;
+
+    private Button nextButton;
+    private int number;
+    private void Start()
+    {
+        cameraManager.MoveToMain();
+
+        descriptionTransform = GameObject.Find("DescriptionContent").transform;
+        researchTransform = GameObject.Find("ResearchContent").transform;
+
+        while (descriptionTransform.childCount > 0)
+        {
+            DestroyImmediate(descriptionTransform.GetChild(0).gameObject);
+        }
+        while (researchTransform.childCount > 0)
+        {
+            DestroyImmediate(researchTransform.GetChild(0).gameObject);
+        }
+        SetParent();
+
+        menuCamera = GameObject.Find("CameraMenu");
+        mainMenu = menuCamera.GetComponent<MainMenuNew>();
+
+        research = GameObject.Find("Book");
+        research.SetActive(false);
+        description = GameObject.Find("Descriptions");
+        description.SetActive(false);
+
+        foreach (GameObject descriptions in listOfDescriptions)
+        {
+            descriptions.SetActive(false);
+        }
+
+        foreach (GameObject results in listOfResults)
+        {
+            results.SetActive(false);
+        }
+
+        LoadModule("0");
+
+        next = GameObject.Find("Btn_Next");
+
+        mainMenu._nextLoad += Load;
+    }
+
+    private void DeleteChild()
+    {
+        var descriptiones = descriptionTransform.gameObject.GetComponentInChildren<Transform>();
+        var researches = researchTransform.gameObject.GetComponentInChildren<Transform>();
+
+        foreach (var descriptions in descriptiones.gameObject.GetComponentsInChildren<Transform>())
+        {
+            descriptions.transform.parent = null;
+            descriptions.transform.parent = gameObject.transform;
+        }
+
+        foreach (var results in researches.gameObject.GetComponentsInChildren<Transform>())
+        {
+            results.transform.parent = null;
+            results.transform.parent = gameObject.transform;
+        }
+    }
+
+    private void SetParent()
+    {
+        foreach (GameObject descriptions in listOfDescriptions)
+        {
+            descriptions.transform.parent = null;
+            descriptions.transform.parent = descriptionTransform;
+            descriptions.transform.position = descriptionTransform.position;
+        }
+
+        foreach (GameObject results in listOfResults)
+        {
+            results.transform.parent = null;
+            results.transform.parent = researchTransform;
+            results.transform.position = researchTransform.position;
+        }
+    }
+
+    public void Load()
+    {
+        int index = PlayerPrefs.GetInt("progress");
+
+        if (index > 8 && index < 90)
+        {
+            number -= index;
+            LoadModule(number.ToString());
+            PlayerPrefs.SetInt("progress", index);
+        }
+    }
+
+    public void LoadModule(string serialNumber)
+    {
+        foreach (GameObject warningSign in mainMenu.sign)
+        {
+            warningSign.SetActive(true);
+        }
+        cameraManager.MoveToMain();
+        //view.SetActive(true);
+        //ruller.SetActive(false);
+
+        foreach (GameObject research in listOfModuls)
+        {
+            research.SetActive(false);
+        }
+
+        foreach (GameObject descriptions in listOfDescriptions)
+        {
+            descriptions.SetActive(false);
+        }
+
+        foreach (GameObject results in listOfResults)
+        {
+            results.SetActive(false);
+        }
+
+        int number = int.Parse(serialNumber);
+        listOfModuls[number].SetActive(true);
+        listOfDescriptions[number].SetActive(true);
+        listOfResults[number].SetActive(true);
+    }
+}
