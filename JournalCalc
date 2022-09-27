@@ -1,0 +1,64 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class JournalCalck : MonoBehaviour
+{
+    [SerializeField] private Text[] inputCell;
+    [SerializeField] private Text[] outputCell;
+
+    private float pi;
+    int i = 0;
+    public void StartCalck()
+    { 
+        for (var n = 0; n < 60; n +=12)
+        {
+            pi = 3.1416f / 180f;
+
+            var angleKL1 = GradusToradian(n+0); 
+
+            var angleKL2 = GradusToradian(n+3); 
+            
+            var angleKP1 = GradusToradian(n+6); 
+             
+            var angleKP2 = GradusToradian(n+9); 
+
+            var angle1 = angleKP1 - angleKL1;
+            var angle2 = angleKP2 - angleKL2;
+
+            var graduses = NormalViewGraduses(angle1, out var minutes, out var seconds);
+            outputCell[i].text = $"{graduses}° {minutes}' {seconds}";
+            graduses = NormalViewGraduses(angle2, out minutes, out seconds);
+            outputCell[i+1].text = $"{graduses}° {minutes}' {seconds}";
+
+            var srAngle = (angle1 + angle2) / 2;
+
+            graduses = NormalViewGraduses(srAngle, out minutes, out seconds);
+            outputCell[i+2].text = $"{graduses}° {minutes}' {seconds}";
+            i+=3;
+        }
+    }
+
+    public int NormalViewGraduses(float angle, out int minutes, out float seconds)
+    {
+        int graduses = (int)angle;
+        float _minut = (angle - graduses) * 60;
+        minutes = (int)_minut;
+        float _second = (_minut - minutes) * 60;
+        seconds = (float)System.Math.Round(_second, 1);
+        return graduses;
+    }
+
+    private float GradusToradian(int i)
+    {
+        var gradus = inputCell[i].text;
+        var minut = inputCell[i + 1].text;
+        var second = inputCell[i + 2].text;
+
+        float angle = float.Parse(gradus) + float.Parse(minut) / 60 + float.Parse(second) / 3600;
+
+        angle *= pi;
+        return angle;
+    }
+}
